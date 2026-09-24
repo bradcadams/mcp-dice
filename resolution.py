@@ -5,6 +5,19 @@ from dice_model import face_lookup, mcp_dice
 from rules import ActiveRule, DiceModQuantity, PassiveRule
 
 
+def merge_temporary_overrides(
+    passive_rules: Sequence[PassiveRule],
+    rule: ActiveRule
+) -> list[PassiveRule]:
+    """Combines passive rules with temporary overrides into a single
+    list to be used when making dice modifications.
+    """
+    return list(passive_rules) + [
+        PassiveRule(name=f"Temp_{rule.name}", override=temp)
+        for temp in rule.temporary_overrides
+    ]
+
+
 def effective_modifiable(
         face_name: str,
         passive_rules: Sequence[PassiveRule],
@@ -56,11 +69,10 @@ def apply_reroll(
     Returns:
         A new roll list with eligible positions rerolled.
     """
-
-    combined_rules = list(passive_rules) + [
-        PassiveRule(name=f"Temp_{rule.name}", override=temp)
-        for temp in rule.temporary_overrides
-    ]
+    combined_rules = merge_temporary_overrides(
+        passive_rules,
+        rule
+    )
 
     eligible_positions = [
         i for i, (face_name, value) in enumerate(zip(roll, results))
@@ -162,6 +174,12 @@ def apply_deterministic_mod(
     own_roll/opponent_roll belong to the rule's OWNER (for the trigger
     check); passive_rules belong to the TARGET's owner (for modifiability).
     """
+
+    combined_rules = merge_temporary_overrides(
+            passive_rules,
+            rule
+        )
+
     # 1. Trigger check — does the owner's roll satisfy the rule's formula?
     trigger_count = resolve_quantity(rule.quantity, own_roll, opponent_roll)
     if trigger_count == 0:  # doesn't have trigger return original
@@ -173,7 +191,7 @@ def apply_deterministic_mod(
             zip(target_roll, target_results)
             )
         if face_matches_target(face_name, value, rule.target)
-        and effective_modifiable(face_name, passive_rules)
+        and effective_modifiable(face_name, combined_rules)
     ]
 
     # 3. Apply to the first N eligible (N = trigger_count, or all if uncapped)

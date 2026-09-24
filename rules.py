@@ -1,4 +1,5 @@
 # import libraries and classes
+import dataclasses
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
@@ -6,6 +7,8 @@ from typing import Literal
 
 # Import DieFace to safely inspect valid fields
 from dice_model import DieFace
+
+_VALID_DIE_FACE_PROPERTIES = {f.name for f in dataclasses.fields(DieFace)}
 
 
 class Window(Enum):
@@ -121,7 +124,7 @@ class PropertyOverride:
         properties = [self.property] if isinstance(self.property, str) \
             else self.property
         for prop in properties:
-            if not hasattr(DieFace, prop):
+            if prop not in _VALID_DIE_FACE_PROPERTIES:
                 raise AttributeError(
                     f"PropertyOverride target invalid attribute '{prop}'. "
                     f"Must match a valid field on DieFace."
@@ -279,7 +282,7 @@ def reroll_all_rule(
             for any other rule). Defaults to None.
 
     Returns:
-        The assembeld ActiveRule.
+        The assembled ActiveRule.
     """
     return ActiveRule(
         name=name,
@@ -311,7 +314,7 @@ def reroll_any_rule(
             for any other rule). Defaults to None.
 
     Returns:
-        The assembeld ActiveRule.
+        The assembled ActiveRule.
     """
     return reroll_x_rule(
         name=name,
