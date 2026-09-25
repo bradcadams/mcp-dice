@@ -22,8 +22,8 @@ def merge_temporary_overrides(
 
 
 def effective_modifiable(
-        face_name: str,
-        passive_rules: Sequence[PassiveRule],
+    face_name: str,
+    passive_rules: Sequence[PassiveRule],
 ) -> bool:
     """Resolves whether a face is modifiable, starting from its base
     DieFace.is_modifiable and applying any matching passive-rule
@@ -44,6 +44,38 @@ def effective_modifiable(
             modifiable = bool(rule.override.effect)
 
     return modifiable
+
+
+def effective_property(
+    face_name: str,
+    property: str,
+    passive_rules: Sequence[PassiveRule]
+) -> int | bool:
+    """Resolves a DieFace property, starting from its base value and
+    applying any matching passive-rule override for that property.
+
+    Args:
+        face_name: One of the six unique face types on the 8-sided
+            MCP die.
+        property: The specific property of the dice face that will be
+            altered.
+        passive_rules: The roll owner's standing passive rules.
+
+    Returns:
+        The property of the dice face after applying passive rules.
+    """
+    value = getattr(face_lookup[face_name], property)
+    for rule in passive_rules:
+        properties = (
+            [rule.override.property]
+            if isinstance(rule.override.property, str)
+            else rule.override.property
+        )
+
+        if rule.override.face == face_name and property in properties:
+            value = rule.override.effect
+
+    return value
 
 
 def apply_reroll(
