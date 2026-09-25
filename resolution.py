@@ -13,7 +13,10 @@ def merge_temporary_overrides(
     list to be used when making dice modifications.
     """
     return list(passive_rules) + [
-        PassiveRule(name=f"Temp_{rule.name}", override=temp)
+        PassiveRule(
+            name=f"Temp_{rule.name}",
+            override=temp
+        )
         for temp in rule.temporary_overrides
     ]
 
@@ -70,8 +73,8 @@ def apply_reroll(
         A new roll list with eligible positions rerolled.
     """
     combined_rules = merge_temporary_overrides(
-        passive_rules,
-        rule
+        passive_rules=passive_rules,
+        rule=rule
     )
 
     eligible_positions = [
@@ -176,12 +179,16 @@ def apply_deterministic_mod(
     """
 
     combined_rules = merge_temporary_overrides(
-            passive_rules,
-            rule
+            passive_rules=passive_rules,
+            rule=rule
         )
 
     # 1. Trigger check — does the owner's roll satisfy the rule's formula?
-    trigger_count = resolve_quantity(rule.quantity, own_roll, opponent_roll)
+    trigger_count = resolve_quantity(
+        quantity_rule=rule.quantity,
+        own_roll=own_roll,
+        opponent_roll=opponent_roll
+    )
     if trigger_count == 0:  # doesn't have trigger return original
         return list(target_roll)
 
